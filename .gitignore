@@ -1,0 +1,28 @@
+# Binários e executáveis
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+fintech-engine
+bin/
+dist/
+
+# Diretórios de dados locais e volumes Docker
+pgdata/
+redisdata/
+
+# Arquivos temporários e de teste
+*.test
+*.out
+*.prof
+
+# IDEs e editores
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Arquivos de ambiente locais
+.env
+.env.local
