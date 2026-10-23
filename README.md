@@ -137,7 +137,13 @@ Docker Engine 24+ & Docker Compose v2+
 Git
 
 1. Boot Environment
-Clone the repository and spin up PostgreSQL, Redis, API, Prometheus, and Grafana:
+Clone the repository and spin up PostgreSQL, Redis, API, Prometheus, and Grafana.
+
+Define a development key in your shell before protected requests:
+
+```bash
+export API_KEY="sua-chave-local"
+```
 
 Bash
 docker compose up -d --build
@@ -164,7 +170,7 @@ MSYS_NO_PATHCONV=1 docker run --rm \
 4. Trigger Nightly Audit
 Bash
 curl -s -X POST [http://127.0.0.1:8080/admin/reconciliation](http://127.0.0.1:8080/admin/reconciliation) \
-  -H "X-API-Key: <sua-chave-de-desenvolvimento>"
+  -H "X-API-Key: $API_KEY"
 Observability & Dashboards
 Prometheus: Metrics available at http://localhost:9090 (scraping /metrics every 5 seconds).
 
@@ -188,7 +194,7 @@ POST /accounts
 Bash
 curl -X POST [http://127.0.0.1:8080/accounts](http://127.0.0.1:8080/accounts) \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: <sua-chave-de-desenvolvimento>" \
+  -H "X-API-Key: $API_KEY" \
   -d '{
     "owner_name": "Raphael Diniz",
     "account_type": "CLIENT",
@@ -199,14 +205,14 @@ GET /accounts/{id}/balance
 
 Bash
 curl -X GET [http://127.0.0.1:8080/accounts/](http://127.0.0.1:8080/accounts/){account_id}/balance \
-  -H "X-API-Key: <sua-chave-de-desenvolvimento>"
+  -H "X-API-Key: $API_KEY"
 Execute Transfer
 POST /transfers
 
 Bash
 curl -X POST [http://127.0.0.1:8080/transfers](http://127.0.0.1:8080/transfers) \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: <sua-chave-de-desenvolvimento>" \
+  -H "X-API-Key: $API_KEY" \
   -H "X-Idempotency-Key: transfer-uuid-1234" \
   -d '{
     "from_account_id": "834164b3-b541-4547-8a6a-5c2132d731e0",
