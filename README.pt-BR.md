@@ -1,6 +1,6 @@
-# Fintech Core Engine (Livro-Razão Distribuído de Alta Performance)
+﻿# Fintech Core Engine (Livro-RazÃ£o DistribuÃ­do de Alta Performance)
 
-[English Version](README.md) | Versão em Português
+[English Version](README.md) | VersÃ£o em PortuguÃªs
 
 [![Go Version](https://img.shields.io/badge/Go-1.23%2B-00ADD8?style=flat-square&logo=go)](https://golang.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16--Alpine-336791?style=flat-square&logo=postgresql)](https://www.postgresql.org)
@@ -9,11 +9,11 @@
 [![Grafana](https://img.shields.io/badge/Grafana-Pr%C3%A9--Configurado-F46800?style=flat-square&logo=grafana)](https://grafana.com)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
 
-Motor bancário central (*core banking engine*) e livro-razão de partidas dobradas de alta vazão desenvolvido em Go. Projetado para garantir consistência transacional absoluta, ausência total de *race conditions* em saldos e conservação estrita de capital sob concorrência extrema.
+Motor bancÃ¡rio central (*core banking engine*) e livro-razÃ£o de partidas dobradas de alta vazÃ£o desenvolvido em Go. Projetado para garantir consistÃªncia transacional absoluta, ausÃªncia total de *race conditions* em saldos e conservaÃ§Ã£o estrita de capital sob concorrÃªncia extrema.
 
 ---
 
-## Visão Geral da Arquitetura
+## VisÃ£o Geral da Arquitetura
 
                   +---------------------------------------+
                   |       Cliente / Gateway de Pagamento  |
@@ -25,16 +25,16 @@ Motor bancário central (*core banking engine*) e livro-razão de partidas dobra
                   +---------------------------------------+
                   |         Fintech Core API (Go)         |
                   |  - Middleware RBAC & Chaves SHA-256   |
-                  |  - Camada de Deduplicação             |
+                  |  - Camada de DeduplicaÃ§Ã£o             |
                   +---------------------------------------+
                          |                         |
-           Lock Distribuído (Spin + Backoff)       | Transação PostgreSQL
-           TTL: 5s / Espera Máxima: 3s             | Isolamento: Read Committed
+           Lock DistribuÃ­do (Spin + Backoff)       | TransaÃ§Ã£o PostgreSQL
+           TTL: 5s / Espera MÃ¡xima: 3s             | Isolamento: Read Committed
                          v                         v
                +------------------+      +-------------------+
                |   Cluster Redis  |      | PostgreSQL Engine |
                +------------------+      +-------------------+
-                                         |  1. Lock Léxico   |
+                                         |  1. Lock LÃ©xico   |
                                          |  2. Double-Entry  |
                                          |  3. Snapshot O(1) |
                                          |  4. Evento Outbox |
@@ -44,66 +44,66 @@ Motor bancário central (*core banking engine*) e livro-razão de partidas dobra
                                            (Outbox Worker)
                                                    v
                                          +-------------------+
-                                         | Tópicos Assíncronos|
+                                         | TÃ³picos AssÃ­ncronos|
                                          | (Webhooks/Kafka)  |
                                          +-------------------+
 
 ---
 
-## Princípios de Engenharia Contábil e Invariantes
+## PrincÃ­pios de Engenharia ContÃ¡bil e Invariantes
 
-### 1. Livro-Razão por Partidas Dobradas (*Double-Entry Bookkeeping*)
-Toda movimentação financeira requer um balanceamento exato entre débitos e créditos. O dinheiro não pode ser criado nem destruído:
+### 1. Livro-RazÃ£o por Partidas Dobradas (*Double-Entry Bookkeeping*)
+Toda movimentaÃ§Ã£o financeira requer um balanceamento exato entre dÃ©bitos e crÃ©ditos. O dinheiro nÃ£o pode ser criado nem destruÃ­do:
 
-$$\sum \text{Débitos} - \sum \text{Créditos} = 0$$
+$$\sum \text{DÃ©bitos} - \sum \text{CrÃ©ditos} = 0$$
 
-Todas as entradas do livro-razão são estritamente imutáveis (*append-only*). Operações de `UPDATE` ou `DELETE` são vedadas no nível de banco de dados.
+Todas as entradas do livro-razÃ£o sÃ£o estritamente imutÃ¡veis (*append-only*). OperaÃ§Ãµes de `UPDATE` ou `DELETE` sÃ£o vedadas no nÃ­vel de banco de dados.
 
-### 2. Snapshots de Saldo $O(1)$ vs. Replay Histórico
-Para assegurar tempos de resposta em milissegundos sem varredura linear de tabelas com milhões de linhas, os saldos consolidados residem na tabela `account_balances`:
+### 2. Snapshots de Saldo $O(1)$ vs. Replay HistÃ³rico
+Para assegurar tempos de resposta em milissegundos sem varredura linear de tabelas com milhÃµes de linhas, os saldos consolidados residem na tabela `account_balances`:
 
 * **Leitura:** Tempo constante $O(1)$ diretamente da tabela indexada de snapshots.
-* **Escrita:** Atualização atômica do saldo consolidado dentro da mesma transação ACID que grava os lançamentos contábeis imutáveis.
+* **Escrita:** AtualizaÃ§Ã£o atÃ´mica do saldo consolidado dentro da mesma transaÃ§Ã£o ACID que grava os lanÃ§amentos contÃ¡beis imutÃ¡veis.
 
-### 3. Controle de Concorrência e Prevenção de Deadlock
-Transferências simultâneas de alta frequência entre contas concorrentes (ex: Conta A transferindo para B enquanto B transfere para A) podem provocar travamento cíclico (*deadlock*). 
+### 3. Controle de ConcorrÃªncia e PrevenÃ§Ã£o de Deadlock
+TransferÃªncias simultÃ¢neas de alta frequÃªncia entre contas concorrentes (ex: Conta A transferindo para B enquanto B transfere para A) podem provocar travamento cÃ­clico (*deadlock*). 
 
-A engine adota uma estratégia de travas em dois níveis:
+A engine adota uma estratÃ©gia de travas em dois nÃ­veis:
 
-| Nível | Mecanismo | Escopo | Objetivo |
+| NÃ­vel | Mecanismo | Escopo | Objetivo |
 | :--- | :--- | :--- | :--- |
-| **Nível 1 (Distribuído)** | Redis Lock / Spin-Lock com Jitter | Conta de Origem | Suaviza picos, evita *thundering herd* e enfileira requisições concorrentes antes de tocarem o banco. |
-| **Nível 2 (Banco)** | `SELECT ... FOR UPDATE` Léxico | Transação SQL | Ordena os locks de contas de forma estritamente alfabética por UUID (`firstID < secondID`), eliminando matematicamente deadlocks cruzados (AB-BA). |
+| **NÃ­vel 1 (DistribuÃ­do)** | Redis Lock / Spin-Lock com Jitter | Conta de Origem | Suaviza picos, evita *thundering herd* e enfileira requisiÃ§Ãµes concorrentes antes de tocarem o banco. |
+| **NÃ­vel 2 (Banco)** | `SELECT ... FOR UPDATE` LÃ©xico | TransaÃ§Ã£o SQL | Ordena os locks de contas de forma estritamente alfabÃ©tica por UUID (`firstID < secondID`), eliminando matematicamente deadlocks cruzados (AB-BA). |
 
 ### 4. Transactional Outbox Pattern
-Desacopla a liquidação financeira da entrega de eventos para serviços externos. Os eventos são registrados na tabela `outbox_events` na mesma transação ACID do ledger. Um worker em segundo plano consome os registros pendentes e realiza o despacho garantindo entrega (*at-least-once*), sem risco de inconsistência por falha de escrita dupla (*dual-write*).
+Desacopla a liquidaÃ§Ã£o financeira da entrega de eventos para serviÃ§os externos. Os eventos sÃ£o registrados na tabela `outbox_events` na mesma transaÃ§Ã£o ACID do ledger. Um worker em segundo plano consome os registros pendentes e realiza o despacho garantindo entrega (*at-least-once*), sem risco de inconsistÃªncia por falha de escrita dupla (*dual-write*).
 
-### 5. Reconciliação Contábil Automática (*Nightly Audit*)
-Um serviço de auditoria periódica comprova a integridade matemática do sistema avaliando:
+### 5. ReconciliaÃ§Ã£o ContÃ¡bil AutomÃ¡tica (*Nightly Audit*)
+Um serviÃ§o de auditoria periÃ³dica comprova a integridade matemÃ¡tica do sistema avaliando:
 
 $$\Delta = \text{account\_balances.current\_balance\_cents} - \sum (\text{CREDIT} - \text{DEBIT})$$
 
-Se $\Delta \neq 0$, o sistema emite alerta crítico imediato e cataloga a divergência na tabela `audit_discrepancies`.
+Se $\Delta \neq 0$, o sistema emite alerta crÃ­tico imediato e cataloga a divergÃªncia na tabela `audit_discrepancies`.
 
 ---
 
 ## Particionamento Mensal do Banco de Dados
 
-A tabela `ledger_entries` é particionada declarativamente por intervalo de datas (`PARTITION BY RANGE (created_at)`):
+A tabela `ledger_entries` Ã© particionada declarativamente por intervalo de datas (`PARTITION BY RANGE (created_at)`):
 
-* **Partições Mensais:** Cada mês armazena registros em tabelas isoladas (ex: `ledger_entries_2026_09`).
-* **Partition Pruning:** Consultas filtram apenas a partição relevante, mantendo índices em memória RAM e evitando degradação sob bilhões de transações.
-* **Provisionamento Autônomo:** Um worker em background roda rotinas PL/pgSQL que criam e mantêm provisionadas as partições para os próximos 12 meses de forma automática.
+* **PartiÃ§Ãµes Mensais:** Cada mÃªs armazena registros em tabelas isoladas (ex: `ledger_entries_2026_09`).
+* **Partition Pruning:** Consultas filtram apenas a partiÃ§Ã£o relevante, mantendo Ã­ndices em memÃ³ria RAM e evitando degradaÃ§Ã£o sob bilhÃµes de transaÃ§Ãµes.
+* **Provisionamento AutÃ´nomo:** Um worker em background roda rotinas PL/pgSQL que criam e mantÃªm provisionadas as partiÃ§Ãµes para os prÃ³ximos 12 meses de forma automÃ¡tica.
 
 ---
 
-## Validação e Benchmark de Concorrência
+## ValidaÃ§Ã£o e Benchmark de ConcorrÃªncia
 
-A engine conta com uma suíte de teste de estresse concorrente (`cmd/stress/main.go`) simulando o cenário clássico de corrida bancária (*Bank Run*):
+A engine conta com uma suÃ­te de teste de estresse concorrente (`cmd/stress/main.go`) simulando o cenÃ¡rio clÃ¡ssico de corrida bancÃ¡ria (*Bank Run*):
 
 * **Saldo Inicial:** R$ 1.000,00 (100.000 centavos).
 * **Carga:** 50 goroutines disparadas simultaneamente no mesmo nanossegundo.
-* **Valor unitário:** R$ 30,00 (3.000 centavos) por transação.
+* **Valor unitÃ¡rio:** R$ 30,00 (3.000 centavos) por transaÃ§Ã£o.
 * **Demanda Total:** R$ 1.500,00 (50% superior ao saldo existente).
 
 ```text
@@ -113,35 +113,35 @@ A engine conta com uma suíte de teste de estresse concorrente (`cmd/stress/main
 [SETUP] Conta Origem criada: ad43f92b... | Saldo: R$ 1000.00
 [SETUP] Conta Destino criada: d6ec5c8c... | Saldo: R$ 0.00
 --------------------------------------------------
-[DISPARO] 50 requisições paralelas de R$ 30.00...
+[DISPARO] 50 requisiÃ§Ãµes paralelas de R$ 30.00...
 [DEMANDA] Total Demandado: R$ 1500.00 | Saldo: R$ 1000.00
 --------------------------------------------------
 Tempo Total Decorrido: 231.05ms
-Throughput Médio     : 216.40 req/seg
-Transferências com SUCESSO: 33 (Esperado: 33)
-Transferências REJEITADAS : 17 (Esperado: 17 por saldo/lock)
+Throughput MÃ©dio     : 216.40 req/seg
+TransferÃªncias com SUCESSO: 33 (Esperado: 33)
+TransferÃªncias REJEITADAS : 17 (Esperado: 17 por saldo/lock)
 --------------------------------------------------
-             CONFERÊNCIA DE BALANÇOS              
+             CONFERÃŠNCIA DE BALANÃ‡OS              
 --------------------------------------------------
 Saldo Final Origem : R$ 10.00 (Centavos: 1000)
 Saldo Final Destino: R$ 990.00 (Centavos: 99000)
-Soma dos Balanços  : R$ 1000.00 (Esperado: R$ 1.000,00)
+Soma dos BalanÃ§os  : R$ 1000.00 (Esperado: R$ 1.000,00)
 ==================================================
-✓ SUCESSO: Zero race conditions detectadas!
-✓ Conservação de capital e travas atômicas 100% validadas.
+âœ“ SUCESSO: Zero race conditions detectadas!
+âœ“ ConservaÃ§Ã£o de capital e travas atÃ´micas 100% validadas.
 ==================================================
 Como Executar
-Pré-requisitos
+PrÃ©-requisitos
 Docker Engine 24+ & Docker Compose v2+
 
 Git
 
 1. Inicializar o Ambiente
-Clone o repositório e inicialize os containers do PostgreSQL, Redis, API, Prometheus e Grafana:
+Clone o repositÃ³rio e inicialize os containers do PostgreSQL, Redis, API, Prometheus e Grafana:
 
 Bash
 docker compose up -d --build
-2. Verificar a Saúde da Engine
+2. Verificar a SaÃºde da Engine
 Bash
 curl -s [http://127.0.0.1:8080/health](http://127.0.0.1:8080/health)
 Retorno esperado:
@@ -161,26 +161,24 @@ MSYS_NO_PATHCONV=1 docker run --rm \
   -w "/app" \
   golang:alpine \
   go run ./cmd/stress/main.go
-4. Executar Reconciliação Contábil Sob Demanda
+4. Executar ReconciliaÃ§Ã£o ContÃ¡bil Sob Demanda
 Bash
 curl -s -X POST [http://127.0.0.1:8080/admin/reconciliation](http://127.0.0.1:8080/admin/reconciliation) \
-  # Inclua o header X-API-Key usando uma chave configurada somente no seu ambiente
 Observabilidade e Monitoramento
-Prometheus: Métricas disponíveis em http://localhost:9090 (raspando /metrics a cada 5 segundos).
+Prometheus: MÃ©tricas disponÃ­veis em http://localhost:9090 (raspando /metrics a cada 5 segundos).
 
-Grafana: Painel pronto em http://localhost:3000 (Usuário: admin / Senha: admin).
+Grafana: Painel pronto em http://localhost:3000 (UsuÃ¡rio: admin / Senha: admin).
 
-Métricas Expostas
-fintech_transfers_total{status="settled|rejected", reason="..."}: Contador de liquidações e rejeições categorizadas.
+MÃ©tricas Expostas
+fintech_transfers_total{status="settled|rejected", reason="..."}: Contador de liquidaÃ§Ãµes e rejeiÃ§Ãµes categorizadas.
 
-fintech_transfer_duration_seconds: Histograma de latência transacional (percentis p50, p95 e p99).
+fintech_transfer_duration_seconds: Histograma de latÃªncia transacional (percentis p50, p95 e p99).
 
-fintech_ledger_entries_total{entry_type="CREDIT|DEBIT"}: Rastreamento em tempo real de débitos e créditos.
+fintech_ledger_entries_total{entry_type="CREDIT|DEBIT"}: Rastreamento em tempo real de dÃ©bitos e crÃ©ditos.
 
-fintech_active_distributed_locks: Monitoramento de contenção de travas no Redis.
+fintech_active_distributed_locks: Monitoramento de contenÃ§Ã£o de travas no Redis.
 
-Referência da API
-Todas as rotas operacionais exigem o cabeçalho X-API-Key. Rotas que alteram estado financeiro exigem X-Idempotency-Key.
+ReferÃªncia da API
 
 Criar Conta
 POST /accounts
@@ -188,7 +186,6 @@ POST /accounts
 Bash
 curl -X POST [http://127.0.0.1:8080/accounts](http://127.0.0.1:8080/accounts) \
   -H "Content-Type: application/json" \
-  # Inclua o header X-API-Key usando uma chave configurada somente no seu ambiente \
   -d '{
     "owner_name": "Raphael Diniz",
     "account_type": "CLIENT",
@@ -199,18 +196,15 @@ GET /accounts/{id}/balance
 
 Bash
 curl -X GET [http://127.0.0.1:8080/accounts/](http://127.0.0.1:8080/accounts/){account_id}/balance \
-  # Inclua o header X-API-Key usando uma chave configurada somente no seu ambiente
-Executar Transferência Atômica
+Executar TransferÃªncia AtÃ´mica
 POST /transfers
 
 Bash
 curl -X POST [http://127.0.0.1:8080/transfers](http://127.0.0.1:8080/transfers) \
   -H "Content-Type: application/json" \
-  # Inclua o header X-API-Key usando uma chave configurada somente no seu ambiente \
-  -H "X-Idempotency-Key: transfer-uuid-1234" \
   -d '{
     "from_account_id": "834164b3-b541-4547-8a6a-5c2132d731e0",
     "to_account_id": "f516a70a-4424-42b7-a3f2-1d54d24a0d9e",
     "amount_cents": 15000,
-    "description": "Liquidação Pix"
+    "description": "LiquidaÃ§Ã£o Pix"
   }'

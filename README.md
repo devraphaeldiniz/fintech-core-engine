@@ -1,6 +1,6 @@
-# Fintech Core Engine (High-Performance Distributed Ledger)
+﻿# Fintech Core Engine (High-Performance Distributed Ledger)
 
-English Version | [Versão em Português](README.pt-BR.md)
+English Version | [VersÃ£o em PortuguÃªs](README.pt-BR.md)
 
 [![Go Version](https://img.shields.io/badge/Go-1.23%2B-00ADD8?style=flat-square&logo=go)](https://golang.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16--Alpine-336791?style=flat-square&logo=postgresql)](https://www.postgresql.org)
@@ -113,22 +113,22 @@ The engine includes an automated concurrent stress suite (`cmd/stress/main.go`) 
 [SETUP] Conta Origem criada: ad43f92b... | Saldo: R$ 1000.00
 [SETUP] Conta Destino criada: d6ec5c8c... | Saldo: R$ 0.00
 --------------------------------------------------
-[DISPARO] 50 requisições paralelas de R$ 30.00...
+[DISPARO] 50 requisiÃ§Ãµes paralelas de R$ 30.00...
 [DEMANDA] Total Demandado: R$ 1500.00 | Saldo: R$ 1000.00
 --------------------------------------------------
 Tempo Total Decorrido: 231.05ms
-Throughput Médio     : 216.40 req/seg
-Transferências com SUCESSO: 33 (Esperado: 33)
-Transferências REJEITADAS : 17 (Esperado: 17 por saldo/lock)
+Throughput MÃ©dio     : 216.40 req/seg
+TransferÃªncias com SUCESSO: 33 (Esperado: 33)
+TransferÃªncias REJEITADAS : 17 (Esperado: 17 por saldo/lock)
 --------------------------------------------------
-             CONFERÊNCIA DE BALANÇOS              
+             CONFERÃŠNCIA DE BALANÃ‡OS              
 --------------------------------------------------
 Saldo Final Origem : R$ 10.00 (Centavos: 1000)
 Saldo Final Destino: R$ 990.00 (Centavos: 99000)
-Soma dos Balanços  : R$ 1000.00 (Esperado: R$ 1.000,00)
+Soma dos BalanÃ§os  : R$ 1000.00 (Esperado: R$ 1.000,00)
 ==================================================
-✓ SUCESSO: Zero race conditions detectadas!
-✓ Conservação de capital e travas atômicas 100% validadas.
+âœ“ SUCESSO: Zero race conditions detectadas!
+âœ“ ConservaÃ§Ã£o de capital e travas atÃ´micas 100% validadas.
 ==================================================
 Quickstart
 Prerequisites
@@ -170,7 +170,6 @@ MSYS_NO_PATHCONV=1 docker run --rm \
 4. Trigger Nightly Audit
 Bash
 curl -s -X POST [http://127.0.0.1:8080/admin/reconciliation](http://127.0.0.1:8080/admin/reconciliation) \
-  # Inclua o header X-API-Key usando uma chave configurada somente no seu ambiente
 Observability & Dashboards
 Prometheus: Metrics available at http://localhost:9090 (scraping /metrics every 5 seconds).
 
@@ -186,7 +185,6 @@ fintech_ledger_entries_total{entry_type="CREDIT|DEBIT"}: Real-time ledger debit/
 fintech_active_distributed_locks: Real-time Redis lock acquisition and release gauge.
 
 API Reference
-All protected endpoints require the X-API-Key header. State-modifying requests require X-Idempotency-Key.
 
 Create Account
 POST /accounts
@@ -194,7 +192,6 @@ POST /accounts
 Bash
 curl -X POST [http://127.0.0.1:8080/accounts](http://127.0.0.1:8080/accounts) \
   -H "Content-Type: application/json" \
-  # Inclua o header X-API-Key usando uma chave configurada somente no seu ambiente \
   -d '{
     "owner_name": "Raphael Diniz",
     "account_type": "CLIENT",
@@ -205,15 +202,12 @@ GET /accounts/{id}/balance
 
 Bash
 curl -X GET [http://127.0.0.1:8080/accounts/](http://127.0.0.1:8080/accounts/){account_id}/balance \
-  # Inclua o header X-API-Key usando uma chave configurada somente no seu ambiente
 Execute Transfer
 POST /transfers
 
 Bash
 curl -X POST [http://127.0.0.1:8080/transfers](http://127.0.0.1:8080/transfers) \
   -H "Content-Type: application/json" \
-  # Inclua o header X-API-Key usando uma chave configurada somente no seu ambiente \
-  -H "X-Idempotency-Key: transfer-uuid-1234" \
   -d '{
     "from_account_id": "834164b3-b541-4547-8a6a-5c2132d731e0",
     "to_account_id": "f516a70a-4424-42b7-a3f2-1d54d24a0d9e",
