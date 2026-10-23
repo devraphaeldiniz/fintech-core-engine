@@ -170,7 +170,7 @@ MSYS_NO_PATHCONV=1 docker run --rm \
 4. Trigger Nightly Audit
 Bash
 curl -s -X POST [http://127.0.0.1:8080/admin/reconciliation](http://127.0.0.1:8080/admin/reconciliation) \
-  -H "X-API-Key: $API_KEY"
+  # Inclua o header X-API-Key usando uma chave configurada somente no seu ambiente
 Observability & Dashboards
 Prometheus: Metrics available at http://localhost:9090 (scraping /metrics every 5 seconds).
 
@@ -194,7 +194,7 @@ POST /accounts
 Bash
 curl -X POST [http://127.0.0.1:8080/accounts](http://127.0.0.1:8080/accounts) \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: $API_KEY" \
+  # Inclua o header X-API-Key usando uma chave configurada somente no seu ambiente \
   -d '{
     "owner_name": "Raphael Diniz",
     "account_type": "CLIENT",
@@ -205,14 +205,14 @@ GET /accounts/{id}/balance
 
 Bash
 curl -X GET [http://127.0.0.1:8080/accounts/](http://127.0.0.1:8080/accounts/){account_id}/balance \
-  -H "X-API-Key: $API_KEY"
+  # Inclua o header X-API-Key usando uma chave configurada somente no seu ambiente
 Execute Transfer
 POST /transfers
 
 Bash
 curl -X POST [http://127.0.0.1:8080/transfers](http://127.0.0.1:8080/transfers) \
   -H "Content-Type: application/json" \
-  -H "X-API-Key: $API_KEY" \
+  # Inclua o header X-API-Key usando uma chave configurada somente no seu ambiente \
   -H "X-Idempotency-Key: transfer-uuid-1234" \
   -d '{
     "from_account_id": "834164b3-b541-4547-8a6a-5c2132d731e0",
