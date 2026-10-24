@@ -1,0 +1,6 @@
+title = "Gitleaks config for fintech-core-engine"
+
+[allowlist]
+description = "Placeholder API keys em exemplos de curl no README"
+files = ["README.md"]
+regexes = ['X-API-Key:']
