@@ -28,3 +28,8 @@ jobs:
 
       - name: Run tests
         run: go test -v -race ./...
+
+      - name: Scan repository with Gitleaks
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
