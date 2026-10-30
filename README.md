@@ -1,6 +1,6 @@
 # Fintech Core Engine
 
-[![Go Version](https://img.shields.io/badge/Go-1.24-00ADD8?style=flat-square&logo=go)](https://golang.org)
+[![Go Version](https://img.shields.io/badge/Go-1.25-00ADD8?style=flat-square&logo=go)](https://golang.org)
 [![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16--Alpine-336791?style=flat-square&logo=postgresql)](https://www.postgresql.org)
 [![Redis](https://img.shields.io/badge/Redis-7--Alpine-DC382D?style=flat-square&logo=redis)](https://redis.io)
 [![License](https://img.shields.io/badge/License-MIT-blue.svg?style=flat-square)](LICENSE)
@@ -50,7 +50,7 @@ flowchart TD
 
 | Componente | Tecnologia | Decisão Técnica |
 | :--- | :--- | :--- |
-| **Linguagem** | Go (Golang 1.24) | Modelo de concorrência com goroutines leves, footprint de memória baixo, tipagem forte e compilação nativa para baixa latência. |
+| **Linguagem** | Go (Golang 1.25) | Modelo de concorrência com goroutines leves, footprint de memória baixo, tipagem forte e compilação nativa para baixa latência. |
 | **Banco Principal** | PostgreSQL 16 | Confiabilidade ACID, suporte a particionamento nativo por range de datas e controle de concorrência granular via `FOR UPDATE`. |
 | **Lock Distribuído** | Redis 7 | Resposta sub-milissegundo em memória para amortecer picos de requisições sobre a mesma conta antes de atingir o banco relacional. |
 | **Roteamento HTTP** | Chi Router | Roteador idiomático, compatível com a biblioteca padrão `net/http` e com overhead mínimo de alocação de memória. |
@@ -112,13 +112,13 @@ docker compose exec api go run ./cmd/stress/main.go
 
 - **Conservação de Capital:** 100% validada sob 50 disparos simultâneos (zero race conditions, soma das contas conservada no centavo exato).
 - **Taxa de Rejeição Controlada:** 33 transações aceitas e 17 rejeitadas por saldo/lock com consistência atômica.
-- **Latência de Liquidação (p50, p95, p99):** `TODO: Executar benchmark formal em cluster isolado (k6 / vegeta) e registrar histograma de percentis.`
-- **Vazão Máxima Sustentada:** `TODO: Avaliar throughput sob pool distribuído de conexões PostgreSQL.`
 
 ---
 
 ## ⚠️ Limitações e Próximos Passos
 
+- [ ] Rodar benchmark de latência de liquidação (p50/p95/p99) com k6 ou vegeta.
+- [ ] Avaliar a vazão máxima com pool distribuído de conexões PostgreSQL.
 - [ ] Implementar fila de mensageria externa dedicada (ex.: RabbitMQ ou Apache Kafka) como consumidor do worker de Outbox.
 - [ ] Implementar autenticação via mTLS ou tokens JWT com rotação de chaves para substituição da API Key estática.
 - [ ] Ampliar a cobertura de testes unitários com mocks para a camada de persistência (`repository`).
